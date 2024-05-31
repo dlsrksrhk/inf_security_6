@@ -11,8 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @EnableWebSecurity
 @Configuration
@@ -21,25 +20,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .formLogin(configurer -> {
-                    configurer
-                            .loginPage("/loginPage")
-//                            .loginProcessingUrl("/loginProcessing")
-                            .defaultSuccessUrl("/home")
-                            .failureUrl("/failed")
-                            .usernameParameter("userId")
-                            .passwordParameter("passwd")
-//                            .successHandler((request, response, authentication) -> {
-//                                System.out.println("authentification : " + authentication);
-//                                response.sendRedirect("/home");
-//                            })
-//                            .failureHandler((request, response, exception) -> {
-//                                System.out.println("exception : " + exception);
-//                                response.sendRedirect("/loginPage");
-//                            })
-                            .permitAll();
-                });
-
+                .formLogin(Customizer.withDefaults())
+                .logout(config -> config
+                        .logoutUrl("/logoutProc")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logoutProc", "POST"))
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            System.out.println(authentication.getName() + " is logout success!!!");
+                            response.sendRedirect("/logoutSuccess");
+                        })
+                        .deleteCookies("JSESSIONID", "CUSTOM_COOKIE")
+                        .permitAll());
         return http.build();
     }
 
